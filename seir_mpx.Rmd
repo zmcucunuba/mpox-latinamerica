@@ -1,0 +1,162 @@
+---
+title: "Modelo epidemia Monkeypox"
+output: html_document
+date: "2022-08-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(deSolve)
+```
+
+## Desarrollo del modelo
+
+Si una persona del grupo $i$ tiene en promedio $c_{ij}$ encuentros que pueden producir contagios, por unidad de tiempo, con individuos del grupo $j$, el número total de encuentros de la población $i$ será $c_{ij}N_i$. Si, además, cada uno de esos encuentros tiene una probabilidad $p$ de ser infeccioso cuando el encuentro se hace con alguien que está contagiado. La probabilidad de que esta persona realmente esté contagiada está dada por la fracción de infecciosos en el grupo de población; es decir, el número de personas infecciosas del grupo dividido por el tamaño de la población del grupo.
+Por lo tanto, el número de personas contagiadas, por unidad de tiempo del grupo $i$ a través de contactos con personas del grupo $j$, será 
+$$p\,c_{ij}\,S_i\,\left[\frac{I_j}{N_j}\right]; \quad i,j\in\{g,h,p\}$$
+En esta expresión, estamos haciendo la suposición de que la probabilidad de contagio no depende de los grupos que tienen el contacto; los datos disponibles a la fecha, no respaldan la suposición de que esas probabilidades sean diferentes.
+
+## Implementación del modelo
+
+Implementamos el modelo en R, utilizando el paquete **deSolve**, como sigue:
+
+```{r eq-seir}
+p = 0.8
+b_gg = 1; b_gh = 0.05; b_gp = 1e-6
+b_hg = 0.05; b_hh = 0.25; b_hp = 1e-2
+                b_pg = 1e-6; b_ph = 1e-2; b_pp = 1
+                N_g = 1.e6; N_h = 2.e4; N_p = 1.5e2
+parameters <- c(beta_gg = b_gg / N_g, beta_gh = b_gh/N_g, beta_gp = b_gp/N_g,
+                beta_hg = b_hg / N_h, beta_hh = b_hh/N_h, beta_hp = b_hp/N_h,
+                beta_pg = b_pg / N_p, beta_ph = b_ph/N_p, beta_pp = b_pp/N_p,
+                alpha = 0.01, gamma = 1/21)
+state <- c(S_g = N_g, E_g =0, I_g = 0, R_g =0,
+           S_h = N_h, E_h =0, I_h = 0, R_h =0,
+           S_p = N_p, E_p =0, I_p = 1, R_p =0)
+times <- seq(0, 500, by = 1)
+
+
+seir_model <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)),{
+    # force of infection
+    lambda_g <- p*(beta_gg*I_g + beta_gh*I_h + beta_gp*I_p)*S_g
+    lambda_h <- p*(beta_hg*I_g + beta_hh*I_h + beta_hp*I_p)*S_h
+    lambda_p <- p*(beta_pg*I_g + beta_ph*I_h + beta_pp*I_p)*S_p
+    # rate of change
+    dS_g <- -lambda_g
+    dE_g <- lambda_g - alpha * E_g
+    dI_g <- alpha * E_g - gamma * I_g
+    dR_g <- gamma * I_g
+    dS_h <- -lambda_h
+    dE_h <- lambda_h - alpha * E_h
+    dI_h <- alpha * E_h - gamma * I_h
+    dR_h <- gamma * I_h
+    dS_p <- -lambda_p
+    dE_p <- lambda_p - alpha * E_p
+    dI_p <- alpha * E_p - gamma * I_p
+    dR_p <- gamma * I_p
+    # return the rate of change
+    return(list(c(dS_g ,dE_g, dI_g, dR_g, dS_h, dE_h, dI_h, dR_h, dS_p, dE_p, dI_p, dR_p)))
+  }) 
+}
+
+  out<-ode(y=state,times=times,seir_model,parms=parameters)
+  out.df<-as.data.frame(out)
+
+```
+
+```{r}
+plot(out, xlab = "tiempo", ylab = "Población(t)")
+
+```
+
+```{r}
+
+require(ggplot2)
+  mytheme4 <- theme(text=element_text(colour="black")) +
+    theme(panel.grid = element_line(colour = "white")) +
+    theme(panel.background = element_rect(fill = "#B2B2B2")) +
+    theme_bw() 
+  theme_set(mytheme4)
+  
+  title <- bquote("Monkeypox basic SEIR model")
+  subtit <- bquote("Group p")
+  
+  res<-ggplot(out.df,aes(x=time))+
+    ggtitle(bquote(atop(bold(.(title)))))+
+    geom_line(aes(y=S_p,colour="Susceptible"))+
+    geom_line(aes(y=E_p, colour= "Exposed")) +
+    geom_line(aes(y=I_p,colour="Infected"))+
+    geom_line(aes(y=R_p,colour="Removed"))+
+    ylab(label="Number")+
+    xlab(label="Time (days)")+
+    theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+    theme(legend.title=element_text(size=12,face="bold"),
+          legend.background = element_rect(fill='#FFFFFF',
+                                           size=0.5,linetype="solid"),
+          legend.text=element_text(size=10),
+          legend.key=element_rect(colour="#FFFFFF",
+                                  fill='#C2C2C2',
+                                  size=0.25,
+                                  linetype="solid"))+
+    scale_colour_manual("Compartments",
+                        breaks=c("Susceptible", "Exposed", "Infected","Removed"),
+                        values=c("blue","yellow", "red","darkgreen"))
+  
+  print(res)
+  
+    subtit <- bquote("Group MSM")
+
+  res<-ggplot(out.df,aes(x=time))+
+    ggtitle(bquote(atop(bold(.(title)))))+
+    geom_line(aes(y=S_h,colour="Susceptible"))+
+    geom_line(aes(y=E_h, colour= "Exposed")) +
+    geom_line(aes(y=I_h,colour="Infected"))+
+    geom_line(aes(y=R_h,colour="Removed"))+
+    ylab(label="Number")+
+    xlab(label="Time (days)")+
+    theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+    theme(legend.title=element_text(size=12,face="bold"),
+          legend.background = element_rect(fill='#FFFFFF',
+                                           size=0.5,linetype="solid"),
+          legend.text=element_text(size=10),
+          legend.key=element_rect(colour="#FFFFFF",
+                                  fill='#C2C2C2',
+                                  size=0.25,
+                                  linetype="solid"))+
+    scale_colour_manual("Compartments",
+                        breaks=c("Susceptible", "Exposed", "Infected","Removed"),
+                        values=c("blue","yellow", "red","darkgreen"))
+  
+  print(res)
+
+      subtit <- bquote("General population")
+
+  res<-ggplot(out.df,aes(x=time))+
+    ggtitle(bquote(atop(bold(.(title)))))+
+    geom_line(aes(y=S_g,colour="Susceptible"))+
+    geom_line(aes(y=E_g, colour= "Exposed")) +
+    geom_line(aes(y=I_g,colour="Infected"))+
+    geom_line(aes(y=R_g,colour="Removed"))+
+    ylab(label="Number")+
+    xlab(label="Time (days)")+
+    theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+    theme(legend.title=element_text(size=12,face="bold"),
+          legend.background = element_rect(fill='#FFFFFF',
+                                           size=0.5,linetype="solid"),
+          legend.text=element_text(size=10),
+          legend.key=element_rect(colour="#FFFFFF",
+                                  fill='#C2C2C2',
+                                  size=0.25,
+                                  linetype="solid"))+
+    scale_colour_manual("Compartments",
+                        breaks=c("Susceptible", "Exposed", "Infected","Removed"),
+                        values=c("blue","yellow", "red","darkgreen"))
+  
+  print(res)
+
+# ggsave(plot=res,
+#        filename=paste0("SIRplot_","tiempo",t,"beta",b,"gamma",g,".png"),
+#         width=8,height=6,dpi=180)
+#getwd()
+```
