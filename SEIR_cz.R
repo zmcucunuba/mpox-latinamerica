@@ -22,10 +22,13 @@ N_g   <- 1.e6  # Num pob general
 N_l   <- 2.e4  # Num pob HSH low risk
 N_h   <- 1.5e2 # Num pob HSH high risk
 
-inc_period  <- 7.6 # Karhiga el al. 2022 https://doi.org/10.1101/2022.06.22.22276713
-alpha       <- 0.01  # From Exposed to Infectious (¿tal vez muy pequeño?, 1/7.6 = 0.13)
-recovery    <- 21 # Days
-gamma       <- 1/recovery  # From Infectious to Recovered
+latency  <- 7.6 # Charniga el al. 2022 https://doi.org/10.1101/2022.06.22.22276713
+e_to_i_rate <- user(1) # 1/latency
+recovery_rate <- user(1) # 1/infectious period
+
+alpha       <- 0.01  # From Exposed to Infectious (¿tal vez muy pequeño?, 1/7.6 = 0.13 1/latency)
+inf_period  <- 21 # Days
+gamma       <- 1/inf_period  # From Infectious to Recovered
 
 est_S       <- 0.9 # Ref: XXXX (pendiente estimar nosotros dado que COlombia suspendió vacunación en 198xx)
 
@@ -48,12 +51,12 @@ mpxmodel <- function(t, state, parameters) {
   #### Terminar compartimentos
   
   with(as.list(c(state, parameters)),{
-  #------ Force-of-Infection (Incidence per susceptible population)
+    #------ Force-of-Infection (Incidence per susceptible population)
     lambda_g <- p*(beta_gg*I_g + beta_gh*I_h + beta_gp*I_p)*S_g
     lambda_h <- p*(beta_hg*I_g + beta_hh*I_h + beta_hp*I_p)*S_h
     lambda_p <- p*(beta_pg*I_g + beta_ph*I_h + beta_pp*I_p)*S_p
     
-  #------ Rate of Change
+    #------ Rate of Change
     dS_g <- -lambda_g
     dE_g <- lambda_g - alpha * E_g
     dI_g <- alpha * E_g - gamma * I_g
@@ -112,7 +115,7 @@ xstart <- c(S_g = N_g * est_S,
             E_h = 0, 
             I_h = 1, 
             R_h = N_h * (1-est_S)
-            )
+)
 
 
 
@@ -121,7 +124,7 @@ out <- as.data.frame(ode(y      = xstart,   # meaning??
                          times  = tdays,   # meaning??     
                          fun    = mpxmodel,   # meaning??  
                          parms  = parameters)
-                     )  # meaning??   
+)  # meaning??   
 
 
 
