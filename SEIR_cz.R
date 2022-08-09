@@ -81,10 +81,8 @@ tdays  <- seq(1, 365 * 2 , by = 1)
 # ------------    Model
 # ---------------------------------------
 
-
-mpxmodel <- function(tdays, xstart, parameters) {
-  
   #------ Compartimentos del modelo
+
   Sg <- x[1]    #  Susceptible general
   Eg <- x[2]    #  Expuesto general
   Ig <- x[3]    #  Infeccioso general
@@ -97,8 +95,9 @@ mpxmodel <- function(tdays, xstart, parameters) {
   Eh <- x[10]   #  Expuesto high risk
   Ih <- x[11]   #  Infeccioso high risk
   Rh <- x[12]   #  Recuperado high risk
-  
-  
+
+mpxmodel <- function(tdays, xstart, parameters) {
+
   with(as.list(c(xstart, parameters)),{
     
     #------ Force-of-Infection (Incidence per susceptible population)
@@ -122,7 +121,7 @@ mpxmodel <- function(tdays, xstart, parameters) {
     dI_h <- alpha * E_h - gamma * I_h
     dR_h <- gamma * I_h
     # return the rate of change
-    return(list(c(dS_g ,dE_g, dI_g, dR_g, dS_l, dE_l, dI_l, dR_l, dS_h, dE_p, dI_h, dR_h)))
+    return(list(c(dS_g ,dE_g, dI_g, dR_g, dS_l, dE_l, dI_l, dR_l, dS_h, dE_h, dI_h, dR_h)))
   }) 
 }
 
@@ -131,9 +130,103 @@ mpxmodel <- function(tdays, xstart, parameters) {
 #------------   Solving the equation
 #---------------------------------------
 
-out <- ode(y = xstart,times=tdays,fun=mpxmodel, parms=parameters)   ##x not found. ???
+out <- ode(y = xstart,times=tdays,fun=mpxmodel, parms=parameters)   
 out.df<-as.data.frame(out)
-
 plot(out, xlab = "tiempo", ylab = "Población(t)")
+
+
+# --------------------------------------
+#------------   Graphics
+#---------------------------------------
+
+require(ggplot2)
+
+mytheme4 <- theme(text=element_text(colour="black")) +
+  theme(panel.grid = element_line(colour = "white")) +
+  theme(panel.background = element_rect(fill = "#B2B2B2")) +
+  theme_bw() 
+theme_set(mytheme4)
+
+title <- bquote("Monkeypox basic SEIR model")
+subtit <- bquote("Group HSH high risk")
+
+res<-ggplot(out.df,aes(x=time))+
+  ggtitle(bquote(atop(bold(.(title)))))+
+  geom_line(aes(y=S_h,colour="Susceptible"))+
+  geom_line(aes(y=E_h, colour= "Exposed")) +
+  geom_line(aes(y=I_h,colour="Infectious"))+
+  geom_line(aes(y=R_h,colour="Recovered"))+
+  ylab(label="Number")+
+  xlab(label="Time (days)")+
+  theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+  theme(legend.title=element_text(size=12,face="bold"),
+        legend.background = element_rect(fill='#FFFFFF',
+                                         size=0.5,linetype="solid"),
+        legend.text=element_text(size=10),
+        legend.key=element_rect(colour="#FFFFFF",
+                                fill='#C2C2C2',
+                                size=0.25,
+                                linetype="solid"))+
+  scale_colour_manual("Compartments",
+                      breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
+                      values=c("blue","yellow", "red","darkgreen"))
+
+print(res)
+
+subtit <- bquote("Group HSH Low risk")
+
+res<-ggplot(out.df,aes(x=time))+
+  ggtitle(bquote(atop(bold(.(title)))))+
+  geom_line(aes(y=S_l,colour="Susceptible"))+
+  geom_line(aes(y=E_l, colour= "Exposed")) +
+  geom_line(aes(y=I_l,colour="Infectious"))+
+  geom_line(aes(y=R_l,colour="Recovered"))+
+  ylab(label="Number")+
+  xlab(label="Time (days)")+
+  theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+  theme(legend.title=element_text(size=12,face="bold"),
+        legend.background = element_rect(fill='#FFFFFF',
+                                         size=0.5,linetype="solid"),
+        legend.text=element_text(size=10),
+        legend.key=element_rect(colour="#FFFFFF",
+                                fill='#C2C2C2',
+                                size=0.25,
+                                linetype="solid"))+
+  scale_colour_manual("Compartments",
+                      breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
+                      values=c("blue","yellow", "red","darkgreen"))
+
+print(res)
+
+subtit <- bquote("General population")
+
+res<-ggplot(out.df,aes(x=time))+
+  ggtitle(bquote(atop(bold(.(title)))))+
+  geom_line(aes(y=S_g,colour="Susceptible"))+
+  geom_line(aes(y=E_g, colour= "Exposed")) +
+  geom_line(aes(y=I_g,colour="Infectious"))+
+  geom_line(aes(y=R_g,colour="Recovered"))+
+  ylab(label="Number")+
+  xlab(label="Time (days)")+
+  theme(legend.justification=c(1,0), legend.position=c(1,0.5))+
+  theme(legend.title=element_text(size=12,face="bold"),
+        legend.background = element_rect(fill='#FFFFFF',
+                                         size=0.5,linetype="solid"),
+        legend.text=element_text(size=10),
+        legend.key=element_rect(colour="#FFFFFF",
+                                fill='#C2C2C2',
+                                size=0.25,
+                                linetype="solid"))+
+  scale_colour_manual("Compartments",
+                      breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
+                      values=c("blue","yellow", "red","darkgreen"))
+
+print(res)
+
+
+
+
+
+
 
 
