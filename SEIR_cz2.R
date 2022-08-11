@@ -8,7 +8,7 @@ library(ggplot2)
 library(cowplot)
 
 
-p     <- 0.8   # Probabilidad p de ser infeccioso cuando el encuentro se hace con alguien que está contagiado
+p     <- 0.8   # Probabilidad p de volverse E dado que tiene un contacto con I. 
 b_gg  <- 1     # Num contactos general-general
 b_gl  <- 0.05  # Num contactos general-HSH low risk
 b_gh  <- 1e-6  # Num contactos general-HSH high risk
@@ -28,25 +28,26 @@ est_S       <- 0.9 #Susceptibilidad estimada de la infeccion en Colombia
 #Taube et al. 2022 https://doi.org/10.1101/2022.07.29.22278217
 #pendiente estimar nosotros dado que Colombia suspendió vacunación en 1984)
 
-alpha <-  0.01
-#alpha <- 1/latency
+
+alpha <- 1/latency
 gamma <- 1/inf_period
 
 # ---------------------------------------
 # ----------- Specifying parameters
 # ---------------------------------------
 
-parameters <- c(beta_gg = b_gg/N_g, 
-                beta_gl = b_gl/N_g, 
-                beta_gh = b_gh/N_g,
-                beta_lg = b_lg/N_l, 
-                beta_ll = b_ll/N_l, 
-                beta_lh = b_lh/N_l,
-                beta_hg = b_hg/N_h, 
-                beta_hl = b_hl/N_h, 
-                beta_hh = b_hh/N_h,
+parameters <- c(beta_gg = b_gg/N_g,#Tasa =  num promedio de contactos gg / Total poblacion general por unidad de tiempo (dia)
+                beta_gl = b_gl/N_g,#Tasa =  num promedio de contactos gl / Total poblacion general por unidad de tiempo (dia)
+                beta_gh = b_gh/N_g,#Tasa =  num promedio de contactos gh / Total poblacion general por unidad de tiempo (dia)
+                beta_lg = b_lg/N_l,#Tasa =  num promedio de contactos lg / Total poblacion LowRisk por unidad de tiempo (dia)
+                beta_ll = b_ll/N_l,#Tasa =  num promedio de contactos ll / Total poblacion LowRisk por unidad de tiempo (dia)
+                beta_lh = b_lh/N_l,#Tasa =  num promedio de contactos lh / Total poblacion LowRisk por unidad de tiempo (dia)
+                beta_hg = b_hg/N_h,#Tasa = num promedio de contactos hg / Total de poblacion HighRisk por unidad de tiempo (dia)
+                beta_hl = b_hl/N_h,#Tasa = num promedio de contactos hl / Total de poblacion HighRisk por unidad de tiempo (dia)
+                beta_hh = b_hh/N_h,#Tasa = num promedio de contactos hh / Total de poblacion HighRisk por unidad de tiempo (dia)
                 alpha = alpha, 
                 gamma = gamma)
+
 
 
 # ---------------------------------------
@@ -204,6 +205,9 @@ p3 <-
 pp <- cowplot::plot_grid(p1, p2, p3, nrow = 3, align = "hv", labels = "AUTO")
 pp
 save_plot("figs/pp.png", pp, base_width = 7, base_height = 7)
+
+
+
 
 
 
