@@ -8,19 +8,41 @@ library(ggplot2)
 library(cowplot)
 
 
-p     <- 0.8   # Probabilidad p de volverse E dado que tiene un contacto con I. 
-b_gg  <- 1     # Num contactos general-general
-b_gl  <- 0.05  # Num contactos general-HSH low risk
-b_gh  <- 1e-6  # Num contactos general-HSH high risk
-b_lg  <- 0.05  # Num contactos HSH low risk-general
-b_ll  <- 0.25  # Num contactos HSH low risk-HSH low risk
-b_lh  <- 1e-2  # Num contactos HSH low risk-HSH high risk
-b_hg  <- 1e-6  # Num contactos HSH high risk-general risk
-b_hl  <- 1e-2  # Num contactos HSH high risk-HSH low risk
-b_hh  <- 1     # Num contactos HSH high risk-HSH high risk
-N_g   <- 1.e6  # Num pob general
-N_l   <- 2.e4  # Num pob HSH low risk
-N_h   <- 1.5e2 # Num pob HSH high risk
+
+p     <- 1   # Probabilidad p de volverse E dado que tiene un contacto con I. 
+
+# b_gg  <- 1     # Num contactos general-general
+# b_gl  <- 0.05  # Num contactos general-HSH low risk
+# b_gh  <- 1e-6  # Num contactos general-HSH high risk
+# b_lg  <- 0.05  # Num contactos HSH low risk-general
+# b_ll  <- 0.25  # Num contactos HSH low risk-HSH low risk
+# b_lh  <- 1e-2  # Num contactos HSH low risk-HSH high risk
+# b_hg  <- 1e-6  # Num contactos HSH high risk-general risk
+# b_hl  <- 1e-2  # Num contactos HSH high risk-HSH low risk
+# b_hh  <- 1     # Num contactos HSH high risk-HSH high risk
+
+# -------------------------------------------------------
+# ----------- Number of sex partners during the last year 
+# ------------------------------------------------------
+
+b_gg  <- 1.5/365 # Num contactos general-general
+b_gl  <- 0.5/365 # Num contactos general-HSH low risk
+b_gh  <- 0.2/365 # Num contactos general-HSH high risk
+b_ll  <- 3/365 # Num contactos HSH low risk-HSH low risk
+b_lh  <- 2/365 # Num contactos HSH low risk-HSH high risk
+b_hh  <- 50/365 # Num contactos HSH high risk-HSH high risk
+
+b_lg  <- b_gl  # Num contactos HSH low risk-general
+b_hg  <- b_gh  # Num contactos HSH high risk-general risk
+b_hl  <- b_lh  # Num contactos HSH high risk-HSH low risk
+
+p_HSH <- 0.024 #(https://www.sdp.gov.co/sites/default/files/boletin_15.pdf)
+p_HSH_l <- 0.8 #supuesto.. buscar.. 
+N_g   <- 5.425e6  # Num pob general 18-65a de Bogota 
+                  #(SALUDATA-https://saludata.saludcapital.gov.co/osb/index.php/datos-de-salud/demografia/piramidepoblacional/)
+N_HSH <- N_g * p_HSH
+N_l   <- N_HSH * p_HSH_l  # Num pob HSH low risk
+N_h   <-  N_HSH * (1- p_HSH_l)  # Num pob HSH high risk
 
 latency  <- 7.6 #Periodo de incubacion, Charniga el al. 2022 https://doi.org/10.1101/2022.06.22.22276713
 inf_period  <- 21 # Dias # CDC https://www.cdc.gov/poxvirus/monkeypox/clinicians/monitoring.html
