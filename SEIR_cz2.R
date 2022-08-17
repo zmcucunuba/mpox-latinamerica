@@ -25,26 +25,49 @@ p     <- 1   # Probabilidad p de volverse E dado que tiene un contacto con I.
 # ----------- Number of sex partners during the last year 
 # ------------------------------------------------------
 
-b_gg  <- 1.5/365 # Num contactos general-general
-b_gl  <- 0.5/365 # Num contactos general-HSH low risk
-b_gh  <- 0.2/365 # Num contactos general-HSH high risk
-b_ll  <- 3/365 # Num contactos HSH low risk-HSH low risk
-b_lh  <- 2/365 # Num contactos HSH low risk-HSH high risk
-b_hh  <- 50/365 # Num contactos HSH high risk-HSH high risk
+# Experimento David Santiago
 
-b_lg  <- b_gl  # Num contactos HSH low risk-general
-b_hg  <- b_gh  # Num contactos HSH high risk-general risk
-b_hl  <- b_lh  # Num contactos HSH high risk-HSH low risk
+# Num parejas sexuales en últimas 4 semanas
+npg <- 1.5/365
+npl <- 5/365
+nph <- 50/365
 
-p_HSH <- 0.024 #(https://www.sdp.gov.co/sites/default/files/boletin_15.pdf)
-p_HSH_l <- 0.8 #supuesto.. buscar.. 
-N_g   <- 5.425e6  # Num pob general 18-65a de Bogota 
+b_gg  <- npg * 0.9   # Num contactos general-general
+b_gl  <- npg * 0.09  # Num contactos general-HSH low risk
+b_gh  <- npg * 0.01  # Num contactos general-HSH high risk
+
+b_ll  <- npl * 0.9   # Num contactos HSH low risk-HSH low risk
+b_lg  <- npl * 0.05  # Num contactos HSH low risk-HSH high risk
+b_lh  <- npl * 0.05  # Num contactos HSH high risk-HSH high risk
+
+b_hh  <- nph * 0.9   # Num contactos HSH high risk-HSH low risk
+b_hl  <- nph * 0.09  # Num contactos HSH high risk-general risk
+b_hg  <- nph * 0.01  # Num contactos HSH low risk-general
+
+# b_gg  <- 1.5/365 # Num contactos general-general
+# b_gl  <- 0.5/365 # Num contactos general-HSH low risk
+# b_gh  <- 0.2/365 # Num contactos general-HSH high risk
+# b_ll  <- 3/365 # Num contactos HSH low risk-HSH low risk
+# b_lh  <- 2/365 # Num contactos HSH low risk-HSH high risk
+# b_hh  <- 50/365 # Num contactos HSH high risk-HSH high risk
+
+# b_lg  <- b_gl  # Num contactos HSH low risk-general
+# b_hg  <- b_gh  # Num contactos HSH high risk-general risk
+# b_hl  <- b_lh  # Num contactos HSH high risk-HSH low risk
+
+
+# ----- Tamaño de las poblaciones
+
+p_HSH       <- 0.024 #(https://www.sdp.gov.co/sites/default/files/boletin_15.pdf)
+p_HSH_l     <- 0.8 #supuesto.. buscar.. 
+N_total     <- 5.425e6  # Num pob general 18-65a de Bogota 
                   #(SALUDATA-https://saludata.saludcapital.gov.co/osb/index.php/datos-de-salud/demografia/piramidepoblacional/)
-N_HSH <- N_g * p_HSH
-N_l   <- N_HSH * p_HSH_l  # Num pob HSH low risk
-N_h   <-  N_HSH * (1- p_HSH_l)  # Num pob HSH high risk
+N_HSH       <- N_total/2 * p_HSH  # N_total/2 porque corresponde sólo a hombres que son aprox el 50% de N_g
+N_g         <- N_total - N_HSH
+N_l         <- N_HSH * p_HSH_l  # Num pob HSH low risk
+N_h         <- N_HSH * (1- p_HSH_l)  # Num pob HSH high risk
 
-latency  <- 7.6 #Periodo de incubacion, Charniga el al. 2022 https://doi.org/10.1101/2022.06.22.22276713
+latency     <- 7.6 #Periodo de incubacion, Charniga el al. 2022 https://doi.org/10.1101/2022.06.22.22276713
 inf_period  <- 21 # Dias # CDC https://www.cdc.gov/poxvirus/monkeypox/clinicians/monitoring.html
 est_S       <- 0.9 #Susceptibilidad estimada de la infeccion en Colombia
 #Taube et al. 2022 https://doi.org/10.1101/2022.07.29.22278217
@@ -97,7 +120,7 @@ xstart <- c(S_g = N_g * est_S,
 #------------   Time 
 #---------------------------------------
 
-tdays  <- seq(1, 365 * 2 , by = 1)
+tdays  <- seq(1, 365 * 5 , by = 1)
 
 
 
@@ -185,7 +208,7 @@ p1 <-
   geom_line(aes(y=E_h, colour= "Exposed"))  +
   geom_line(aes(y=I_h,colour="Infectious")) +
   geom_line(aes(y=R_h,colour="Recovered")) +
-  coord_cartesian(xlim = c(0, x_limit_days)) +
+  # coord_cartesian(xlim = c(0, x_limit_days)) +
   ylab(label="Number") + xlab(label="Time (days)") +
   scale_colour_manual("",
                       breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
@@ -200,7 +223,7 @@ p2 <-
   geom_line(aes(y=I_l,colour="Infectious"))+
   geom_line(aes(y=R_l,colour="Recovered"))+
   ylab(label="Number") + xlab(label="Time (days)") +
-  coord_cartesian(xlim = c(0, x_limit_days)) +
+  # coord_cartesian(xlim = c(0, x_limit_days)) +
   scale_colour_manual("",
                       breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
                       values=c("blue","orange", "red","darkgreen"))
@@ -216,7 +239,7 @@ p3 <-
   geom_line(aes(y=I_g,colour="Infectious"))+
   geom_line(aes(y=R_g,colour="Recovered"))+
   ylab(label="Number") + xlab(label="Time (days)") +
-  coord_cartesian(xlim = c(0, x_limit_days)) +
+  # coord_cartesian(xlim = c(0, x_limit_days)) +
   scale_colour_manual("",
                       breaks=c("Susceptible", "Exposed", "Infectious","Recovered"),
                       values=c("blue","orange", "red","darkgreen"))
@@ -226,7 +249,7 @@ p3 <-
 
 pp <- cowplot::plot_grid(p1, p2, p3, nrow = 3, align = "hv", labels = "AUTO")
 pp
-save_plot("figs/pp.png", pp, base_width = 7, base_height = 7)
+# save_plot("figs/pp.png", pp, base_width = 7, base_height = 7)
 
 
 
