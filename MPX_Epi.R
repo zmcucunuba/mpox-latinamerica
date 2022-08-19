@@ -15,7 +15,7 @@ library(readr)
 
 # Agregated
 acases <-"https://shiny.pahobra.org/monkeypox/session/f8b64fab92128c4787a68b467d97468f/download/data1?w="
-acases <-read_csv(acases) #de la libreria readr
+acases <- read_csv(acases) #de la libreria readr
 
 # Individual
 icases  <- "https://shiny.pahobra.org/monkeypox/session/f8b64fab92128c4787a68b467d97468f/download/data2?w="
