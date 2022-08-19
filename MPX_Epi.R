@@ -29,7 +29,8 @@ icases <- read_csv("data/cases/mpx_linelist.csv")
 # Cleaning data
 names(acases) <- epitrix::clean_labels(names(acases))
 names(icases) <- epitrix::clean_labels(names(icases))
-
+# icases_less_2022 <- icases %>% filter(date_onset >= as.Date("2022-01-01"))
+icases <- icases %>% filter(date_onset >= as.Date("2022-01-01"))
 acases <- acases %>% filter(classification == "Confirmed")
 
 
@@ -86,12 +87,18 @@ sc_fis_cases <- icases %>%
 
 ggplot() +
   geom_col(data = scl_not_cases, aes(x= report_date, y = cases, fill = "report_date"), 
-           alpha = .5, colour = "black") +
+           alpha = .5, colour = "black", size = 0.1) +
   geom_col(data = sc_fis_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
-           alpha = .5, colour = "black") +
+           alpha = .5, colour = "black", size = 0.1) +
   ggtitle(label = "selected countries ") +
   guides(fill = guide_legend(title=""))  +
   facet_wrap(~ iso3, scales = "free_y") 
+
+# Tarea
+
+#Calcular R(t) con aprox 18 días de rezago
+
+
   
 
   
