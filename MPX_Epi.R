@@ -71,6 +71,29 @@ ggplot() +
            alpha = .5, colour = "black") +
   ggtitle(label = "COL cases") +
   guides(fill = guide_legend(title="")) 
+
+
+
+scl_not_cases <- icases %>% 
+  filter (iso3 %in% selected_countries) %>%
+  group_by(report_date, iso3) %>%
+  summarise (cases = n())
+
+sc_fis_cases <- icases %>% 
+  filter (iso3 %in% selected_countries) %>%
+  group_by(date_onset, iso3) %>%
+  summarise (cases = n())
+
+ggplot() +
+  geom_col(data = scl_not_cases, aes(x= report_date, y = cases, fill = "report_date"), 
+           alpha = .5, colour = "black") +
+  geom_col(data = sc_fis_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
+           alpha = .5, colour = "black") +
+  ggtitle(label = "selected countries ") +
+  guides(fill = guide_legend(title=""))  +
+  facet_wrap(~ iso3, scales = "free_y") 
+  
+
   
 
 
