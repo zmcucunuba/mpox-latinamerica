@@ -9,7 +9,7 @@ library(cowplot)
 
 
 
-p     <- 1   # Probabilidad p de volverse E dado que tiene un contacto con I. 
+p     <- 1   # Probabilidad p de volverse E siendo S y dado que tiene un contacto con I. 
 
 # b_gg  <- 1     # Num contactos general-general
 # b_gl  <- 0.05  # Num contactos general-HSH low risk

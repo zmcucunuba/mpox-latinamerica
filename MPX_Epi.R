@@ -46,8 +46,15 @@ icases[-c(6198, 11892, 1218, 6098), ]  #se remueven observaciones con fechas ant
 icases_clean <- icases[-c(6198, 11892, 1218, 6098), ]  
 
 names(acases) <- epitrix::clean_labels(names(acases))
+<<<<<<< HEAD
 names(icases_clean) <- epitrix::clean_labels(names(icases_clean))
 
+=======
+names(icases) <- epitrix::clean_labels(names(icases))
+# icases_less_2022 <- icases %>% filter(date_onset >= as.Date("2022-01-01"))
+icases <- icases %>% filter(date_onset >= as.Date("2022-01-01"))
+acases <- acases %>% filter(classification == "Confirmed")
+>>>>>>> 4727ae8d474453531f864bee7bdef8f577429861
 
 mistakes <- which(icases_clean$date_onset >= icases_clean$date_diagnosis) 
 icases_clean[mistakes, ] #se remueven observaciones con fechas de inicio de sintomas >= a fecha de diagnostico
@@ -139,12 +146,27 @@ arg_fis_cases <- icases_clean %>%
   summarise (cases = n())
 
 ggplot() +
+<<<<<<< HEAD
   geom_col(data = arg_not_cases, aes(x= report_date, y = cases, fill = "date_report"), 
            alpha = .5, colour = "black") +
   geom_col(data = arg_fis_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
            alpha = .5, colour = "black") +
   ggtitle(label = "ARG cases") +
   guides(fill = guide_legend(title="")) 
+=======
+  geom_col(data = scl_not_cases, aes(x= report_date, y = cases, fill = "report_date"), 
+           alpha = .5, colour = "black", size = 0.1) +
+  geom_col(data = sc_fis_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
+           alpha = .5, colour = "black", size = 0.1) +
+  ggtitle(label = "selected countries ") +
+  guides(fill = guide_legend(title=""))  +
+  facet_wrap(~ iso3, scales = "free_y") 
+
+# Tarea
+
+#Calcular R(t) con aprox 18 días de rezago
+
+>>>>>>> 4727ae8d474453531f864bee7bdef8f577429861
 
   
 #------ Grafica de casos de Mexico discriminado por inicio de sintomas y fecha de reporte
