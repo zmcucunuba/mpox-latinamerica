@@ -42,13 +42,14 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data.csv")
-icases <- read_csv("data/cases/mpx_linelist.csv")
+acases <- read_csv("data/cases/mpx_data(1sep).csv")
+icases <- read_csv("data/cases/mpx_linelist (1sep).csv")
 
 #------ Limpiar los datos
 
-icases[-c(6198, 11892, 1218, 6098), ]  #Se remueven observaciones con fechas antes de 2022
-icases_clean <- icases[-c(6198, 11892, 1218, 6098), ]  
+icases[-c(7138,7124,12535,13555,19917,5927,3127,2622,2721,596,20343,3765,5819,12535,6480,9858), ]  #Se remueven observaciones con fechas antes de 
+#2022
+icases_clean <- icases[-c(7138,7124,12535,13555,19917,5927,3127,2622,2721,596,20343,3765,5819,12535,6480,9858), ]  
 
 names(acases) <- epitrix::clean_labels(names(acases))
 names(icases_clean) <- epitrix::clean_labels(names(icases_clean))
@@ -206,131 +207,6 @@ ggplot() +
   guides(fill = guide_legend(title="")) 
 
 
-#------ Grafica de casos de Bolivia discriminado por inicio de sintomas y fecha de reporte (ERROR, NO CORRE, VERIFICAR)
-
-
-bol_not_cases <- icases_clean %>% 
-  filter (iso3 %in% "BOL") %>%
-  group_by(report_date) %>%
-  summarise (cases = n())
-
-
-bol_fis_cases <- icases_clean %>% 
-  filter (iso3 %in% "BOL") %>%
-  group_by(date_onset) %>%
-  summarise (cases = n())
-
-ggplot() +
-  geom_col(data = bol_not_cases, aes(x= report_date, y = cases, fill = "date_report"), 
-           alpha = .5, colour = "black") +
-  geom_col(data = bol_fis_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
-           alpha = .5, colour = "black") +
-  ggtitle(label = "BOL cases") +
-  guides(fill = guide_legend(title="")) 
-
-
-#--------Curvas de incidencia diaria de paises seleccionados desde enero 2022
-
-i_daily_selected_countries <- incidence((icases_clean %>% filter (iso3 %in% selected_countries))$date_onset)
-                     
-i_daily_selected_countries
-
-
-
-plot(i_daily_selected_countries, border = "black")
-
-
-#--------Curvas de incidencia semanal de paises seleccionados desde enero 2022
-
-i_weekly_selected_countries <- incidence((icases_clean %>% filter (iso3 %in% selected_countries))$date_onset,interval=7)
-                    
-i_weekly_selected_countries
-
-
-plot(i_weekly_selected_countries,border = "black")
-
-#-------Estimación de la tasa de crecimientode paises seleccionados mediante un modelo log-lineal 
-
-#Grafico de la incidencia transformada logaritmicamente
-
-ggplot(as.data.frame(i_weekly_selected_countries)) + 
-  geom_point(aes(x = dates, y = log(counts))) + 
-  scale_x_incidence(i_weekly_selected_countries) +
-  xlab("date") +
-  ylab("log weekly incidence selected countries") + 
-  theme_minimal()
-
-#Ajuste un modelo log-lineal a los datos de incidencia semanal
-
-f_selected_countries <- incidence::fit(i_weekly_selected_countries)
-f_selected_countries
-
-plot(i_weekly_selected_countries, fit = f_selected_countries)
-
-#-------Encontrando una fecha límite adecuada para el modelo log-lineal de paises seleccionados, en función de los retrasos observados
-
-#Utilizando la gráfica del logaritmo (incidencia) que graficó anteriormente, y pensando en por qué el crecimiento exponencial no puede observarse 
-#en las últimas semanas, elija una fecha límite y ajuste el modelo logarítmico lineal a una sección adecuada de la epicurva donde crea que puede 
-#estimar de manera más confiable la tasa de crecimiento r, y el tiempo de duplicación.
-
-#Es posible que desee examinar cuánto tiempo después de la aparición de los síntomas hasta el diagnostico; para obtener un reporte de una fecha
-#especifica, siga estos comandos. 
-
-summary(as.numeric(icases_clean$date_diagnosis -  icases_clean$date_onset)) #no me corre con paises seleccionados sino con el total de las americas
-
-  
-#¿cuántas semanas debe descartar al final de la epicurva? 
-
-# Semanas a descartar al final de la epicurva
-n_weeks_to_discard_selected_countries <- 2
-
-min_date_selected_countries <- min(i_daily_selected_countries$dates)
-
-max_date_selected_countries <- max(i_daily_selected_countries$dates) - n_weeks_to_discard_selected_countries * 7
-
-
-# Para truncar la incidencia semanal 
-i_weekly_trunc_selected_countries <- subset(i_weekly_selected_countries, 
-                         from = min_date_selected_countries, 
-                         to = max_date_selected_countries) # descarte las últimas semanas de datos
-
-# incidencia diaria truncada.No la usamos para la regresión lineal pero se puede usar más adelante
-
-#Vuelva a montar y a graficar el modelo logarítmico lineal, pero utilizando los datos truncados i_weekly_trunc. 
-#Los resultados deben ser como los siquientes:
-
-f_selected_countries <- incidence::fit(i_weekly_trunc_selected_countries)
-f_selected_countries
-
-
-
-plot(i_weekly_trunc_selected_countries, fit = f_selected_countries)
-
-#Observe las estadísticas resumidas de su ajuste:
-
-#Puede observar la bondad del ajuste (Rsquared), la pendiente estimada (tasa de crecimiento/growth rate) y el tiempo de duplicación correspondiente 
-#como se muestra a continuación:
-
-#¿El modelo se ajusta bien a los datos?
-adjRsq_model_fit_selected_countries <- summary(f_selected_countries$model)$adj.r.squared
-
-
-#¿Cuál es la tasa de crecimiento estimada de la epidemia?
-daily_growth_rate_selected_countries<- f_selected_countries$model$coefficients['dates.x']
-
-
-# intervalo de confianza:
-daily_growth_rate_CI_selected_countries <- confint(f_selected_countries$model, 'dates.x', level=0.95)
-
-
-#¿Cuál es el tiempo de duplicación de la epidemia?
-doubling_time_days_selected_countries <- log(2) / daily_growth_rate_selected_countries
-
-# intervalo de confianza:
-doubling_time_days_CI_selected_countries <- log(2) / rev(daily_growth_rate_CI_selected_countries)
-
-
-
 
 #--------Curvas de incidencia diaria de Colombia desde enero 2022
 
@@ -430,9 +306,7 @@ doubling_time_days_CI_col <- log(2) / rev(daily_growth_rate_CI_col)
 
 
 
-
-
-#--------Curvas de incidencia diaria de Brasil desde enero 2022
+#--------Curvas de incidencia diaria de Brasil desde enero 2022 (corre raro)
 
 i_daily_bra <- incidence((icases_clean %>% filter (iso3 %in% "BRA"))$date_onset)
 
@@ -442,7 +316,7 @@ i_daily_bra
 plot(i_daily_bra, border = "black")
 
 
-#--------Curvas de incidencia semanal de Brasil desde enero 2022
+#--------Curvas de incidencia semanal de Brasil desde enero 2022 (corre raro)
 
 i_weekly_bra<- incidence((icases_clean %>% filter (iso3 %in% "BRA"))$date_onset,interval=7)
 
@@ -508,8 +382,6 @@ plot(i_weekly_trunc_bra, fit = f_bra)
 #Observe las estadísticas resumidas de su ajuste:
 
 summary(f_bra$model)
-
-
 
 
 #Puede observar la bondad del ajuste (Rsquared), la pendiente estimada (tasa de crecimiento/growth rate) y el tiempo de duplicación correspondiente 
@@ -640,7 +512,7 @@ doubling_time_days_arg <- log(2) / daily_growth_rate_arg
 
 # intervalo de confianza:
 doubling_time_days_CI_arg <- log(2) / rev(daily_growth_rate_CI_arg)
-#12.7-17.2
+
 
 
 
@@ -850,14 +722,24 @@ doubling_time_days_CI_mex <- log(2) / rev(daily_growth_rate_CI_mex)
 
 
 
+#Guardar elementos importantes...
+info <- list(i_daily_col=i_daily_col,
+             min_date_col=min_date_col,
+             max_date_col=max_date_col,
+             i_daily_bra=i_daily_bra,
+             min_date_bra=min_date_bra,
+             max_date_bra=max_date_bra,
+             i_daily_per=i_daily_per,
+             min_date_per=min_date_per,
+             max_date_per=max_date_per,
+             i_daily_arg=i_daily_arg,
+             min_date_arg=min_date_arg,
+             max_date_arg=max_date_arg,
+             i_daily_mex=i_daily_mex,
+             min_date_mex=min_date_mex,
+             max_date_mex=max_date_mex)
 
-
-
-
-
-
-
-
+saveRDS(info, "data/cases/info.RDS")
 
 
 
