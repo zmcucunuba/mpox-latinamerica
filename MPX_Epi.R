@@ -47,12 +47,31 @@ icases <- read_csv("data/cases/mpx_linelist (1sep).csv")
 
 #------ Limpiar los datos
 
-icases[-c(7138,7124,12535,13555,19917,5927,3127,2622,2721,596,20343,3765,5819,12535,6480,9858), ]  #Se remueven observaciones con fechas antes de 
-#2022
-icases_clean <- icases[-c(7138,7124,12535,13555,19917,5927,3127,2622,2721,596,20343,3765,5819,12535,6480,9858), ]  
 
 names(acases) <- epitrix::clean_labels(names(acases))
-names(icases_clean) <- epitrix::clean_labels(names(icases_clean))
+names(icases) <- epitrix::clean_labels(names(icases))
+
+mistakes_onset <- which(icases$date_onset<=as.Date("2021-12-31") ) 
+icases_clean_onset <- icases[-mistakes_onset, ] 
+
+#########
+
+corregir_fechas <- function(bd, col_sucia){ 
+  mistakes <- which(as.Date(col_sucia)<=as.Date("2021-12-31") ) 
+  icases_clean <- bd[-mistakes, ] 
+ 
+  return(icases_clean)
+  
+}
+
+icases_clean <- corregir_fechas(icases,icases$date_onset)
+
+icases_clean<- corregir_fechas(icases_clean,icases_clean$date_diagnosis)
+
+icases_clean<- corregir_fechas(icases_clean,icases_clean$date_rash)
+
+
+#######
 
 
 mistakes <- which(icases_clean$date_onset >= icases_clean$date_diagnosis) 
