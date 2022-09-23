@@ -36,7 +36,7 @@ info <- readRDS("data/cases/info.RDS")
 
 
 
-#Fuente de datos: https://pubmed.ncbi.nlm.nih.gov/35817231/
+#Fuente de datos LA: https://pubmed.ncbi.nlm.nih.gov/35817231/
 
 #------------Estimacion de la transmisibilidad (R) en Colombia
 
