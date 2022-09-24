@@ -37,8 +37,8 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data(1sep).csv")
-icases <- read_csv("data/cases/mpx_linelist (1sep).csv")
+acases <- read_csv("data/cases/mpx_data_23Sep.csv")
+icases <- read_csv("data/cases/mpx_linelist_23Sep.csv")
 
 #------ Data cleaning 
 names(acases) <- epitrix::clean_labels(names(acases))
@@ -47,7 +47,7 @@ names(icases) <- epitrix::clean_labels(names(icases))
 
 #Creating function for fixing dates
 fix_date <- function(base, wrong_col){ 
-  mistakes <- which(as.Date(wrong_col)<=as.Date("2021-12-31") ) 
+  mistakes <- which(as.Date(wrong_col)<=as.Date("2022-05-01") ) 
   icases_clean <- base[-mistakes, ] 
   
   return(icases_clean)
@@ -133,16 +133,22 @@ for(country in lscountries){
 for(country in lscountries){
   
   #Log-transformed incidence graph
-  ggplot(as.data.frame(i_weekly)) + 
+  plot<-  ggplot(as.data.frame(i_weekly)) + 
     geom_point(aes(x = dates, y = log(counts))) + 
     scale_x_incidence(i_weekly) +
     xlab("date") +
     ylab(paste("log weekly incidence ",country)) + 
     theme_minimal()
+  print(plot)
+}
+
+#Four loop
+for(country in lscountries){
   
+
   #Fitting a log-linear model to the weekly incidence data
   f <- incidence::fit(i_weekly)
-  plot(i_weekly, fit = f)
+  print(plot(i_weekly, fit = f))
   
   #Weeks to discard at the end of the epicurve 
   n_weeks_to_discard<- 2
@@ -153,12 +159,13 @@ for(country in lscountries){
   i_weekly_trunc <- subset(i_weekly, 
                            from = min_date, 
                            to = max_date) 
+
   
   #Re-assemble and plot the log-linear model, but using the truncated i_weekly_trunc data. 
   #The results should look like the following:
   
   f<- incidence::fit(i_weekly_trunc)
-  plot(i_weekly_trunc, fit = f)
+  print(plot(i_weekly_trunc, fit = f))
   
   #Note the summary statistics of your adjustment:
   summary(f$model)
@@ -171,7 +178,7 @@ for(country in lscountries){
   #Confidence interval:
   daily_growth_rate_CI <- confint(f$model, 'dates.x', level=0.95)
   
-  #What is the epidemic doubling time?
+ #What is the epidemic doubling time?
   doubling_time_days <- log(2) / daily_growth_rate
   #Confidence interval:
   doubling_time_days_CI <- log(2) / rev(daily_growth_rate_CI)
@@ -179,7 +186,55 @@ for(country in lscountries){
 }
 
 
+#Fifth loop
+
+for(country in lscountries){
+
+#Para truncar la incidencia diaria
+
+i_daily_trunc <- subset(i_daily, 
+                            from = min_date, 
+                            to = max_date)
+
+i_daily_trunc$counts
+
+config <- make_config(mean_si = 9.8, # media de la distribución 
+                          std_si = 9.1,  # desviación estándar de la distribución 
+                          t_start = 2,         # día de inicio de la ventana de tiempo
+                          t_end = length(i_daily_trunc$counts)) # último día de la ventana de tiempo
 
 
+R <- estimate_R(incid = i_daily_trunc,
+                    method = c("parametric_si"),
+                    si_data = NULL,
+                    si_sample = NULL,
+                    config = config)
+
+print(plot(R, legend = FALSE))
+
+#Extraiga la mediana y los intervalos de credibilidad del ( CrI) para el número de reproducción de la siguiente manera:
+
+R_median <- R$R$`Median(R)`
+
+
+R_CrI <- c(R$R$`Quantile.0.025(R)`, R$R$`Quantile.0.975(R)`)
+R_CrI
+
+#------------Estimacion de la transmisibilidad variable en el tiempo (Rt) 
+
+config= make_config(list(mean_si = 9.8, std_si = 9.1))  
+
+# use estimate_R using method = "parametric_si"
+Rt <- estimate_R(i_daily_trunc, method = "parametric_si", 
+                     si_data = NULL,
+                     config = config)
+
+# mire las estimaciones de Rt más recientes:
+tail(Rt$R[, c("t_start", "t_end", "Median(R)", 
+                  "Quantile.0.025(R)", "Quantile.0.975(R)")])
+
+print(plot(Rt, legend = FALSE))
+
+}
 
 
