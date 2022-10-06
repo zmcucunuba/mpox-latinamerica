@@ -74,17 +74,30 @@ selected_countries <- c("COL", "BRA", "PER", "MEX", "ARG")
 
 #------ Cummulative cases for selected countries (COL, BRA, PER, MEX, ARG)
 
-ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
+
+
+c_cum <- 
+  ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
   geom_line(aes(x= date, y = cases)) +
   facet_wrap(~ iso3, scales = "free_y") +
-  ggtitle(label = "Cummulative MPX cases")
+  ylab(label = "Casos acumulados\nde viruela símica") +
+  xlab ("Fecha")
+
 
 #------ New cases for selected countries  (COL, BRA, PER, MEX, ARG)
 
-ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
+c_new <-
+  ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
   geom_line(aes(x= date, y = new_cases)) +
   facet_wrap(~ iso3, scales = "free_y") +
-  ggtitle(label = "New cases")
+  ylab(label = "Casos nuevos\nde viruela símica") +
+  xlab ("Fecha")
+
+
+cowplot::plot_grid(c_cum, c_new, nrow = 2, labels = "AUTO")
+
+
+
 
 #------ Cases by country according to date_onset and reporte_date
 
