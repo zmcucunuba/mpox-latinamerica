@@ -37,8 +37,8 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data_23Sep.csv")
-icases <- read_csv("data/cases/mpx_linelist_23Sep.csv")
+acases <- read_csv("data/cases/mpx_data_11Oct.csv")
+icases <- read_csv("data/cases/mpx_linelist._11Octcsv.csv")
 
 #------ Data cleaning 
 names(acases) <- epitrix::clean_labels(names(acases))
@@ -103,42 +103,53 @@ cowplot::plot_grid(c_cum, c_new, nrow = 2, labels = "AUTO")
 
 lscountries <- c("PER","BRA","MEX","ARG","COL")
 
-for(country in lscountries){
+f_plot_epicurve <- function(country) {
   
-  report_date_cases <- icases_clean%>% 
+  report_date_cases <- icases_clean %>% 
     filter (iso3 %in% country) %>%
     group_by(report_date) %>%
     summarise (cases = n())
   
-  date_onset_cases <- icases_clean%>% 
+  date_onset_cases <- icases_clean %>% 
     filter (iso3%in% country) %>%
     group_by(date_onset) %>%
     summarise (cases = n())
   
   plot <- ggplot() +
     geom_col(data = report_date_cases, aes(x= report_date, y = cases, fill = "date_report"), 
-             alpha = .5, colour = "black") +
+             alpha = .5, colour = "black", size = 0.1) +
     geom_col(data = date_onset_cases, aes(x= date_onset, y = cases, fill = "date_onset"),
-             alpha = .5, colour = "black") +
-    ggtitle(label = paste(country," cases")) +
-    guides(fill = guide_legend(title="")) 
-  print(plot)
+             alpha = .5, colour = "black",  size = 0.1) +
+    ggtitle(label = paste(country)) +
+    guides(fill = guide_legend(title="")) +
+    theme(legend.position="none")
+  # 
+  return(plot)
+  
 }
 
 
-#--------Curves of daily and weekly incidence by country
+cowplot::plot_grid(f_plot_epicurve ("PER"),
+                   f_plot_epicurve ("COL"),
+                   f_plot_epicurve ("MEX"),
+                   f_plot_epicurve ("ARG") + 
+                     theme(legend.position=c(0.1,.75), legend.background = "none"),
+                   nrow = 2)
 
-#Second loop
-for(country in lscountries){
-  
-  #By day
-  i_daily <- incidence((icases_clean %>% filter (iso3 %in% country))$date_onset)
-  print(plot(i_daily, border = "black"))
-  
-  #By week
-  i_weekly <- incidence((icases_clean %>% filter (iso3 %in% country))$date_onset,interval=7)
-  print(plot(i_weekly,border = "black"))
-}
+
+# #--------Curves of daily and weekly incidence by country
+# 
+# #Second loop
+# for(country in lscountries){
+#   
+#   #By day
+#   i_daily <- incidence((icases_clean %>% filter (iso3 %in% country))$date_onset)
+#   print(plot(i_daily, border = "black"))
+#   
+#   #By week
+#   i_weekly <- incidence((icases_clean %>% filter (iso3 %in% country))$date_onset,interval=7)
+#   print(plot(i_weekly,border = "black"))
+# }
 
 #-------Estimation of the growth rate and doubling time by country using a log-linear model 
 
