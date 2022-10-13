@@ -72,10 +72,9 @@ icases_clean <- icases_clean[-mistakes, ]
 acases <- acases %>% filter(classification == "Confirmed")
 
 #Selection of the countries
-selected_countries <- c("COL", "BRA", "PER", "MEX", "ARG",  "CHL", "ECU")
+selected_countries <- c("COL", "BRA", "PER", "MEX", "ARG",  "CHL")
 
-#------ Cummulative cases for selected countries (COL, BRA, PER, MEX, ARG)
-
+#------ Cummulative cases for selected countries 
 
 
 c_cum <- 
@@ -263,3 +262,31 @@ ARG_pm <- 480/45380000 * 1e6
 PER_pm <- 2768/32970000 * 1e6
 CHL_pm <- 1012/19120000  * 1e6
 MEX_pm <- 1968/128900000 * 1e6
+
+
+
+#cuantos son hombres
+icases_clean %>% filter(country_en=="Brazil") %>% count(gender=="MALE")
+icases_clean %>% filter(country_en=="Argentina") %>% count(gender=="MALE")
+icases_clean %>% filter(country_en=="Chile") %>% count(gender=="MALE")
+icases_clean %>% filter(country_en=="Colombia") %>% count(gender=="MALE")
+icases_clean %>% filter(country_en=="Mexico") %>% count(gender=="MALE")
+icases_clean %>% filter(country_en=="Peru") %>% count(gender=="MALE")
+
+#cuantos son msm
+icases_clean %>% filter(country_en=="Brazil") %>% count(sexual_orientation=="MSM")
+icases_clean %>% filter(country_en=="Argentina") %>% count(sexual_orientation=="MSM")
+icases_clean %>% filter(country_en=="Chile") %>% count(sexual_orientation=="MSM")
+icases_clean %>% filter(country_en=="Colombia") %>% count(sexual_orientation=="MSM")
+icases_clean %>% filter(country_en=="Mexico") %>% count(sexual_orientation=="MSM")
+icases_clean %>% filter(country_en=="Peru") %>% count(sexual_orientation=="MSM")
+
+
+
+
+
+
+
+
+
+
