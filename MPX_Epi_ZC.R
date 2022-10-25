@@ -37,8 +37,8 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data_11Oct.csv")
-icases <- read_csv("data/cases/mpx_linelist._11Octcsv.csv")
+acases <- read_csv("data/cases/mpx_data_25_oct.csv")
+icases <- read_csv("data/cases/mpx_linelist_25_oct.csv")
 
 #------ Data cleaning 
 names(acases) <- epitrix::clean_labels(names(acases))
@@ -83,6 +83,8 @@ c_cum <-
   facet_wrap(~ iso3, scales = "free_y") +
   ylab(label = "Casos acumulados\nde viruela símica") +
   xlab ("Fecha")
+
+c_cum
 
 
 #------ New cases for selected countries  (COL, BRA, PER, MEX, ARG)
@@ -137,8 +139,8 @@ cowplot::plot_grid(f_plot_epicurve ("BRA"),
                    f_plot_epicurve ("COL"),
                    f_plot_epicurve ("MEX"),
                    f_plot_epicurve ("ARG"),
-                   f_plot_epicurve ("CHL"),
-                   f_plot_epicurve ("ECU")
+                   f_plot_epicurve ("CHL")
+                   
                    + 
                      theme(legend.position=c(0.3,.95), 
                            legend.background = element_blank()),
@@ -154,6 +156,7 @@ fRunRt <- function(icases_clean, country_iso, time_start_delay = 2) {
   
   
   i_weekly <- incidence((icases_clean %>% filter (iso3 %in% country_iso))$report_date,interval=7)
+  i_daily <- incidence((icases_clean %>% filter (iso3 %in% country_iso))$report_date)
   n_weeks_to_discard <- 2
   min_date <- min(i_daily$dates)
   max_date <- max(i_daily$dates) - n_weeks_to_discard * 7
@@ -248,6 +251,24 @@ rt %>% filter(country == "MEX") %>% summarise (max(Rt_mean, na.rm = TRUE))
 rt %>% filter(country == "PER") %>% summarise (max(Rt_mean, na.rm = TRUE))
 rt %>% filter(country == "ARG") %>% summarise (max(Rt_mean, na.rm = TRUE))
 
+rt %>% filter(country == "CHL") %>% summarise (min(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "COL") %>% summarise (min(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "BRA") %>% summarise (min(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "MEX") %>% summarise (min(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "PER") %>% summarise (min(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "ARG") %>% summarise (min(Rt_mean, na.rm = TRUE))
+
+
+
+rt %>% filter(country == "CHL") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "COL") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "BRA") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "MEX") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "PER") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+rt %>% filter(country == "ARG") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+
+
+
 rt %>% filter(country == "CHL") 
 rt %>% filter(country == "COL") 
 rt %>% filter(country == "BRA") 
@@ -256,12 +277,13 @@ rt %>% filter(country == "PER")
 rt %>% filter(country == "ARG")
 
 
-COL_pm <- 2730/51600000 *1e6
-BRA_pm <- 8461/212600000 *1e6
-ARG_pm <- 480/45380000 * 1e6
-PER_pm <- 2768/32970000 * 1e6
-CHL_pm <- 1012/19120000  * 1e6
-MEX_pm <- 1968/128900000 * 1e6
+#numero de casos por millon de habitantes (25-oct-2022)
+COL_pm <- 3298/51600000 *1e6
+BRA_pm <- 8978/212600000 *1e6
+ARG_pm <- 627/45380000 * 1e6
+PER_pm <- 2981/32970000 * 1e6
+CHL_pm <- 1127/19120000  * 1e6
+MEX_pm <- 2468/128900000 * 1e6
 
 
 
