@@ -12,7 +12,6 @@ library(tidyverse)
 library(readr)
 library(readxl)
 library(incidence)
-library(epicontacts)
 library(distcrete)
 library(epitrix)
 library(EpiEstim)
@@ -37,8 +36,8 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data_25_oct.csv")
-icases <- read_csv("data/cases/mpx_linelist_25_oct.csv")
+acases <- read_csv("data/cases/mpx_data_06_Nov.csv")
+icases <- read_csv("data/cases/mpx_linelist_06_ Nov.csv")
 
 #------ Data cleaning 
 names(acases) <- epitrix::clean_labels(names(acases))
@@ -81,8 +80,8 @@ c_cum <-
   ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
   geom_line(aes(x= date, y = cases)) +
   facet_wrap(~ iso3, scales = "free_y") +
-  ylab(label = "Casos acumulados\nde viruela símica") +
-  xlab ("Fecha")
+  ylab(label = "Cumulative confirmed cases\nof monkeypox by country") +
+  xlab ("Date")
 
 c_cum
 
@@ -93,8 +92,8 @@ c_new <-
   ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
   geom_line(aes(x= date, y = new_cases)) +
   facet_wrap(~ iso3, scales = "free_y") +
-  ylab(label = "Casos nuevos\nde viruela símica") +
-  xlab ("Fecha")
+  ylab(label = "New confirmed cases\nof monkeypox by country") +
+  xlab ("Date")
 
 
 cowplot::plot_grid(c_cum, c_new, nrow = 2, labels = "AUTO")
