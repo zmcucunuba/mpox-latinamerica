@@ -36,8 +36,8 @@ library(knitr)
 # icases <-read_csv(icases) #de la libreria readr
 
 
-acases <- read_csv("data/cases/mpx_data_06_Nov.csv")
-icases <- read_csv("data/cases/mpx_linelist_06_ Nov.csv")
+acases <- read_csv("data/cases/mpx_data_9_nov.csv")
+icases <- read_csv("data/cases/mpx_linelist_9_nov.csv")
 
 #------ Data cleaning 
 names(acases) <- epitrix::clean_labels(names(acases))
@@ -274,15 +274,6 @@ rt %>% filter(country == "BRA")
 rt %>% filter(country == "MEX") 
 rt %>% filter(country == "PER") 
 rt %>% filter(country == "ARG")
-
-
-#numero de casos por millon de habitantes (25-oct-2022)
-COL_pm <- 3298/51600000 *1e6
-BRA_pm <- 8978/212600000 *1e6
-ARG_pm <- 627/45380000 * 1e6
-PER_pm <- 2981/32970000 * 1e6
-CHL_pm <- 1127/19120000  * 1e6
-MEX_pm <- 2468/128900000 * 1e6
 
 
 
