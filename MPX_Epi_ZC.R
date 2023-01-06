@@ -1,11 +1,10 @@
-#--------------------------------------------- 
+#--------------------------------------------------------------------------------------------------------------------------------------------------- 
 #
-# Descriptive analysis of MPX outbreak in Latin America 
+# Epidemiological findings and estimates of the instantaneous reproduction number and control strategies of the first Mpox outbreak in Latin America
 #
-#--------------------------------------------- 
+#--------------------------------------------------------------------------------------------------------------------------------------------------- 
 
 rm(list=ls())
-
 
 library(tidyverse)
 library(readr)
@@ -74,7 +73,6 @@ selected_countries <- c("COL", "BRA", "PER", "MEX", "ARG",  "CHL")
 
 #------ Cummulative cases for selected countries 
 
-
 c_cum <- 
   ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
   geom_line(aes(x= date, y = cases)) +
@@ -96,9 +94,6 @@ c_new <-
 
 
 cowplot::plot_grid(c_cum, c_new, nrow = 2, labels = "AUTO")
-
-
-
 
 #------ Cases by country according to date_onset and reporte_date
 
@@ -131,7 +126,6 @@ f_plot_epicurve <- function(country) {
   
 }
 
-
 cowplot::plot_grid(f_plot_epicurve ("BRA"),
                    f_plot_epicurve ("PER"),
                    f_plot_epicurve ("COL"),
@@ -144,11 +138,9 @@ cowplot::plot_grid(f_plot_epicurve ("BRA"),
                            legend.background = element_blank()),
                    nrow = 2)
 
+#------------Estimation of the instantaneous reproduction number R(t)
 
-
-#------------Estimacion de la transmisibilidad variable en el tiempo (Rt) 
-
-#Para truncar la incidencia diaria
+#To truncate the daily incidence
 
 fRunRt <- function(icases_clean, country_iso, time_start_delay = 2) {
   
@@ -160,19 +152,20 @@ fRunRt <- function(icases_clean, country_iso, time_start_delay = 2) {
   max_date <- max(i_daily$dates) - n_weeks_to_discard * 7
   window <- 1 #in weeks
   
-  # To truncate the weekly incidence 
+# To truncate the weekly incidence 
   i_weekly_trunc <- subset(i_weekly, 
                            from = min_date, 
                            to = max_date) 
   
-  # time_start_delay <- 2  
-  config <- make_config(mean_si = 9.8/7, # media de la distribución
-                        std_si = 9.1/7,  # desviación estándar de la distribución
+# time_start_delay <- 2  
+  config <- make_config(mean_prior = 1.5/7,
+                        mean_si = 8.5/7, # media de la distribución
+                        std_si = 5.0/7,  # desviación estándar de la distribución
                         t_start = time_start_delay:(length(i_weekly_trunc$counts)-window),         # día de inicio de la ventana de tiempo
                         t_end = (time_start_delay + 1):length(i_weekly_trunc$counts)
   ) # último día de la ventana de tiempo
   
-  # use estimate_R using method = "parametric_si"
+# use estimate_R using method = "parametric_si"
   
   data_incidence <- data.frame (I = i_weekly_trunc$counts, 
                                 date = as.Date(i_weekly_trunc$weeks), 
@@ -192,11 +185,7 @@ fRunRt <- function(icases_clean, country_iso, time_start_delay = 2) {
   data_incidence <- merge(data_incidence, Rt_out, by = "t_start", all = TRUE) %>%
     mutate(country = country_iso)
   
-  
-  
-  
   return(data_incidence)
-  
   
 }
 
@@ -209,9 +198,7 @@ rt <- rbind(
   fRunRt(icases_clean, "COL", time_start_delay = 2)
 )
 
-
 plot_f <- function(rt_data) {
-  
   
   rt_plot <- ggplot(rt_data) +
     geom_ribbon(aes(x = date, ymin= Rt_lower, ymax=Rt_upper), fill = "grey") +
@@ -219,7 +206,6 @@ plot_f <- function(rt_data) {
     facet_wrap(~ country, scales = "free_y") +
     theme_bw() + ylab ("") + xlab("") +
     coord_cartesian(ylim = c(0, 5))
-  
   
   inc_plot  <- ggplot(rt_data) +
     geom_col( aes(x = date, y = I), color = "black") +
@@ -230,9 +216,7 @@ plot_f <- function(rt_data) {
   
   return(plot_final)
   
-  
 }
-
 
 BRA <- plot_f (rt_data = fRunRt(icases_clean, "BRA", time_start_delay = 2))
 COL <- plot_f (rt_data = fRunRt(icases_clean, "COL", time_start_delay = 2))
@@ -242,6 +226,13 @@ PER <- plot_f (rt_data = fRunRt(icases_clean, "PER", time_start_delay = 2))
 MEX <- plot_f (rt_data = fRunRt(icases_clean, "MEX", time_start_delay = 2))
 
 cowplot::plot_grid(ARG, BRA, CHL, COL, MEX, PER, nrow = 2)
+
+rt %>% filter(country == "CHL") 
+rt %>% filter(country == "COL") 
+rt %>% filter(country == "BRA") 
+rt %>% filter(country == "MEX") 
+rt %>% filter(country == "PER") 
+rt %>% filter(country == "ARG")
 
 rt %>% filter(country == "CHL") %>% summarise (max(Rt_mean, na.rm = TRUE))
 rt %>% filter(country == "COL") %>% summarise (max(Rt_mean, na.rm = TRUE))
@@ -257,22 +248,117 @@ rt %>% filter(country == "MEX") %>% summarise (min(Rt_mean, na.rm = TRUE))
 rt %>% filter(country == "PER") %>% summarise (min(Rt_mean, na.rm = TRUE))
 rt %>% filter(country == "ARG") %>% summarise (min(Rt_mean, na.rm = TRUE))
 
+#------------Sensitivity analysis
 
-rt %>% filter(country == "CHL") %>% summarise (mean(Rt_mean, na.rm = TRUE))
-rt %>% filter(country == "COL") %>% summarise (mean(Rt_mean, na.rm = TRUE))
-rt %>% filter(country == "BRA") %>% summarise (mean(Rt_mean, na.rm = TRUE))
-rt %>% filter(country == "MEX") %>% summarise (mean(Rt_mean, na.rm = TRUE))
-rt %>% filter(country == "PER") %>% summarise (mean(Rt_mean, na.rm = TRUE))
-rt %>% filter(country == "ARG") %>% summarise (mean(Rt_mean, na.rm = TRUE))
+#Using Prior mean R(t) = 3.8
+
+# cfRunRt <- function(icases_clean, country_iso, time_start_delay = 2) {
+#   
+#   i_weekly <- incidence((icases_clean %>% filter (iso3 %in% country_iso))$date_onset,interval=7)
+#   i_daily <- incidence((icases_clean %>% filter (iso3 %in% country_iso))$date_onset)
+#   n_weeks_to_discard <- 2
+#   min_date <- min(i_daily$dates)
+#   max_date <- max(i_daily$dates) - n_weeks_to_discard * 7
+#   window <- 1 #in weeks
+#   
+#   # To truncate the weekly incidence 
+#   i_weekly_trunc <- subset(i_weekly, 
+#                            from = min_date, 
+#                            to = max_date) 
+#   
+#   # time_start_delay <- 2  
+#   config_2 <- make_config(mean_prior = 3.8/7,
+#                         mean_si = 8.5/7, # media de la distribución
+#                         std_si = 5.0/7,  # desviación estándar de la distribución
+#                         t_start = time_start_delay:(length(i_weekly_trunc$counts)-window),         # día de inicio de la ventana de tiempo
+#                         t_end = (time_start_delay + 1):length(i_weekly_trunc$counts)
+#   ) # último día de la ventana de tiempo
+#   
+#   # use estimate_R using method = "parametric_si"
+#   
+#   data_incidence <- data.frame (I = i_weekly_trunc$counts, 
+#                                 date = as.Date(i_weekly_trunc$weeks), 
+#                                 week = i_weekly_trunc$weeks) 
+#   data_incidence$t_start <- 1: nrow(data_incidence)
+#   
+#   Rt <- estimate_R(data_incidence, 
+#                    method = "parametric_si", 
+#                    config = config_2)
+#   
+#   Rt_out <- data.frame(t_start = Rt$R$t_start,
+#                        t_end = Rt$R$t_end,
+#                        Rt_mean = Rt$R$`Mean(R)`, 
+#                        Rt_lower = Rt$R$`Quantile.0.025(R)`,
+#                        Rt_upper = Rt$R$`Quantile.0.975(R)`)
+#   
+#   data_incidence <- merge(data_incidence, Rt_out, by = "t_start", all = TRUE) %>%
+#     mutate(country = country_iso)
+#   
+#   return(data_incidence)
+#   
+# }
+# 
+# rt <- rbind(
+#   fRunRt(icases_clean, "BRA", time_start_delay = 2),
+#   fRunRt(icases_clean, "ARG", time_start_delay = 2),
+#   fRunRt(icases_clean, "CHL", time_start_delay = 2),
+#   fRunRt(icases_clean, "MEX", time_start_delay = 2),
+#   fRunRt(icases_clean, "PER", time_start_delay = 2),
+#   fRunRt(icases_clean, "COL", time_start_delay = 2)
+# )
+# 
+# plot_f <- function(rt_data) {
+#   
+#   rt_plot <- ggplot(rt_data) +
+#     geom_ribbon(aes(x = date, ymin= Rt_lower, ymax=Rt_upper), fill = "grey") +
+#     geom_line( aes(x = date, y = Rt_mean), color = "black") +
+#     facet_wrap(~ country, scales = "free_y") +
+#     theme_bw() + ylab ("") + xlab("") +
+#     coord_cartesian(ylim = c(0, 5))
+#   
+#   inc_plot  <- ggplot(rt_data) +
+#     geom_col( aes(x = date, y = I), color = "black") +
+#     facet_wrap(~ country, scales = "free_y") +
+#     theme_bw()  + xlab ("") + ylab("")
+#   
+#   plot_final <- cowplot::plot_grid(inc_plot, rt_plot, nrow = 2, align = TRUE)
+#   
+#   return(plot_final)
+#   
+# }
+# 
+# BRA <- plot_f (rt_data = fRunRt(icases_clean, "BRA", time_start_delay = 2))
+# COL <- plot_f (rt_data = fRunRt(icases_clean, "COL", time_start_delay = 2))
+# ARG <- plot_f (rt_data = fRunRt(icases_clean, "ARG", time_start_delay = 2))
+# CHL <- plot_f (rt_data = fRunRt(icases_clean, "CHL", time_start_delay = 2))
+# PER <- plot_f (rt_data = fRunRt(icases_clean, "PER", time_start_delay = 2))
+# MEX <- plot_f (rt_data = fRunRt(icases_clean, "MEX", time_start_delay = 2))
+# 
+# cowplot::plot_grid(ARG, BRA, CHL, COL, MEX, PER, nrow = 2)
+# 
+# rt %>% filter(country == "CHL") 
+# rt %>% filter(country == "COL") 
+# rt %>% filter(country == "BRA") 
+# rt %>% filter(country == "MEX") 
+# rt %>% filter(country == "PER") 
+# rt %>% filter(country == "ARG")
+# 
+# rt %>% filter(country == "CHL") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "COL") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "BRA") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "MEX") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "PER") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "ARG") %>% summarise (max(Rt_mean, na.rm = TRUE))
+# 
+# rt %>% filter(country == "CHL") %>% summarise (min(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "COL") %>% summarise (min(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "BRA") %>% summarise (min(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "MEX") %>% summarise (min(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "PER") %>% summarise (min(Rt_mean, na.rm = TRUE))
+# rt %>% filter(country == "ARG") %>% summarise (min(Rt_mean, na.rm = TRUE))
 
 
-
-rt %>% filter(country == "CHL") 
-rt %>% filter(country == "COL") 
-rt %>% filter(country == "BRA") 
-rt %>% filter(country == "MEX") 
-rt %>% filter(country == "PER") 
-rt %>% filter(country == "ARG")
+#------------Descriptive analysis 
 
 #proportion of male
 icases_clean %>% filter(country_en=="Brazil") %>% count(gender=="MALE") #91.8 
@@ -282,8 +368,8 @@ icases_clean %>% filter(country_en=="Colombia") %>% count(gender=="MALE") # 97.1
 icases_clean %>% filter(country_en=="Mexico") %>% count(gender=="MALE") # 97.5
 icases_clean %>% filter(country_en=="Peru") %>% count(gender=="MALE") #98.2
 
-#age
-Bra <- icases_clean %>% filter(country_en=="Brazil") %>% median(age_years, na.rm = TRUE) 
+#median age
+Bra <- icases_clean %>% filter(country_en=="Brazil") 
 median(Bra$age_years, na.rm=TRUE)
 
 Arg <- icases_clean %>% filter(country_en=="Argentina") 
@@ -302,7 +388,7 @@ Per <- icases_clean %>% filter(country_en=="Peru")
 median(Per$age_years, na.rm=TRUE)
 
 
-#map of mpox confirmed cases by country
+#------------Map of mpox confirmed cases by country
 
 library(ggplot2)             
 library(tidyverse)   
@@ -313,7 +399,6 @@ View(mapdata)
 
 icases_clean_map <- icases_clean %>% rename(region=country_en) 
 icases_clean_map %>% count(region) -> casos
-
 
 mapdata <- left_join(mapdata, casos, by="region")
 
