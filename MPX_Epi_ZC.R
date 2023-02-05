@@ -75,23 +75,27 @@ selected_countries <- c("COL", "BRA", "PER", "MEX", "ARG",  "CHL")
 
 c_cum <- 
   ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
-  geom_line(aes(x= date, y = cases)) +
+  geom_line(aes(x= date, y = cases), colour = "#4B0082", size = 1) +
+  geom_area(aes(x= date, y = cases), fill = "#E6E6FA") +
   facet_wrap(~ iso3, scales = "free_y") +
   ylab(label = "Cumulative confirmed cases\nof Mpox by country") +
-  xlab ("Date of report")
+  xlab ("Date of report") +
+  theme_clean()  
 
 c_cum
 
-
+library(ggthemes)
 #------ New cases for selected countries  (COL, BRA, PER, MEX, ARG)
 
 c_new <-
   ggplot(data = acases %>% filter (iso3 %in% selected_countries)) +
-  geom_line(aes(x= date, y = new_cases)) +
+  geom_line(aes(x= date, y = new_cases), colour = "#4B0082", size = 1) +
+  geom_area(aes(x= date, y = new_cases), fill = "#E6E6FA") +
   facet_wrap(~ iso3, scales = "free_y") +
-  ylab(label = "New confirmed cases\nof Mpox by country") +
-  xlab ("Date of report")
-
+  xlab ("Date of report 2022") +
+  theme_clean()  +
+  ylab(label = "New confirmed cases\nof Mpox by country") 
+  
 
 cowplot::plot_grid(c_cum, c_new, nrow = 2, labels = "AUTO")
 
@@ -199,18 +203,26 @@ rt <- rbind(
 )
 
 plot_f <- function(rt_data) {
+  my_breaks <- as.Date(c("2022-06-01", "2022-07-01", "2022-08-01",
+                 "2022-09-01", "2022-10-01", "2022-11-01", 
+                 "2022-12-01"))
   
   rt_plot <- ggplot(rt_data) +
     geom_ribbon(aes(x = date, ymin= Rt_lower, ymax=Rt_upper), fill = "grey") +
-    geom_line( aes(x = date, y = Rt_mean), color = "black") +
+    geom_line( aes(x = date, y = Rt_mean), colour = "#4B0082", size = 1) +
     facet_wrap(~ country, scales = "free_y") +
-    theme_bw() + ylab ("") + xlab("") +
-    coord_cartesian(ylim = c(0, 5))
+    theme_clean() + ylab ("") + xlab("") +
+    coord_cartesian(ylim = c(0, 5)) +
+    scale_x_date(limits = c(as.Date("2022-06-01"), as.Date("2022-12-01")),
+                 breaks = my_breaks) 
+    # geom_area(aes(x= date, y = new_cases), fill = "#E6E6FA") +
   
   inc_plot  <- ggplot(rt_data) +
-    geom_col( aes(x = date, y = I), color = "black") +
+    geom_col( aes(x = date, y = I), color = "#4B0082") +
     facet_wrap(~ country, scales = "free_y") +
-    theme_bw()  + xlab ("") + ylab("")
+    theme_clean()  + xlab ("") + ylab("") +
+    scale_x_date(limits = c(as.Date("2022-06-01"), as.Date("2022-12-01")),
+                 breaks = my_breaks)
   
   plot_final <- cowplot::plot_grid(inc_plot, rt_plot, nrow = 2, align = TRUE)
   
@@ -402,20 +414,29 @@ icases_clean_map %>% count(region) -> casos
 
 mapdata <- left_join(mapdata, casos, by="region")
 
-mapdata1<-mapdata %>% filter(region %in% c("Colombia","Peru","Chile","Argentina","Brazil","Mexico"))
-View(mapdata1)
+# mapdata1<-mapdata %>% filter(region %in% c("Colombia","Peru","Chile","Argentina","Brazil","Mexico"))
+# View(mapdata1)
 
-map1<-ggplot(mapdata1, aes( x = long, y = lat, group=group)) +
-  geom_polygon(aes(fill = n), color = "black")
+map1<-ggplot(mapdata, aes( x = long, y = lat, group=group)) +
+  geom_polygon(aes(fill = n), color = "white")
 map1
 
-map2 <- map1 + scale_fill_gradient(name = "Cumulative Mpox confirmed cases by country", low = "light blue", high =  "dark blue", na.value = "grey50")+
+latlimits <- c(-55, 30) 
+longlimits <- c(-115, -35) 
+
+map2 <- map1 + 
+  # scale_fill_gradient(name = "Cumulative Mpox\nconfirmed cases by country", low = "light blue", high =  "dark blue", na.value = "grey50")+
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks = element_blank(),
         axis.title.y=element_blank(),
         axis.title.x=element_blank(),
-        rect = element_blank()) 
+        rect = element_blank()) +
+  coord_cartesian(xlim = longlimits, ylim = latlimits) +
+  scale_fill_viridis_c( begin = 0, end = 0.5, direction = -1,
+                        name = "Cumulative Mpox\nconfirmed cases by country")+
+  guides(fill = guide_colourbar(barwidth = 0.5, barheight = 20))
+
 
 map2
 
