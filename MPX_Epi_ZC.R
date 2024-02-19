@@ -15,6 +15,7 @@ library(epitrix)
 library(EpiEstim)
 library(projections)
 library(ggplot2)
+library(ggthemes)
 library(magrittr)
 library(binom)
 library(ape)
@@ -215,7 +216,7 @@ plot_f <- function(rt_data) {
     coord_cartesian(ylim = c(0, 5)) +
     scale_x_date(limits = c(as.Date("2022-06-01"), as.Date("2022-12-01")),
                  breaks = my_breaks) +
-    geom_area(aes(x= date, y = new_cases), fill = "#E6E6FA") +
+   
   
   inc_plot  <- ggplot(rt_data) +
     geom_col( aes(x = date, y = I), color = "#4B0082") +
